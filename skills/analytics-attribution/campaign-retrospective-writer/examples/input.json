@@ -1,0 +1,39 @@
+{
+  "campaign_name": "新品首发",
+  "goal_metrics": [
+    {
+      "name": "有效线索",
+      "target": 500,
+      "actual": 540
+    },
+    {
+      "name": "成交数",
+      "target": 50,
+      "actual": 42
+    }
+  ],
+  "channel_performance": [
+    {
+      "name": "搜索",
+      "spend": 60000,
+      "leads": 200,
+      "conversions": 18
+    },
+    {
+      "name": "短视频",
+      "spend": 90000,
+      "leads": 260,
+      "conversions": 14
+    }
+  ],
+  "wins": [
+    "搜索渠道带来高质量线索。"
+  ],
+  "issues": [
+    "短视频素材疲劳较快。"
+  ],
+  "notes": [
+    "下次提前准备更多创意版本"
+  ]
+}
+

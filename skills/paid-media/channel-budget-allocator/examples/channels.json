@@ -1,0 +1,24 @@
+[
+  {
+    "name": "搜索",
+    "roi": 3.2,
+    "cpa": 120,
+    "capacity": 0.7,
+    "stability": 0.9
+  },
+  {
+    "name": "信息流",
+    "roi": 2.4,
+    "cpa": 95,
+    "capacity": 0.9,
+    "stability": 0.6
+  },
+  {
+    "name": "短视频",
+    "roi": 2.8,
+    "cpa": 105,
+    "capacity": 1.0,
+    "stability": 0.7
+  }
+]
+
