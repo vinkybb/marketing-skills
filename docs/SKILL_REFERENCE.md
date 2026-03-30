@@ -23,7 +23,7 @@
 | Paid Media | `ad-copy-variant-generator` | 为同一创意方向生成多组文案变体，方便 A/B 测试。 | 创意角度、字数限制、CTA 类型、平台规范 | `按痛点型角度帮我写 3 组广告文案，每条 45 字以内，CTA 是立即咨询。` | Markdown Skill | `变体 A：直接痛点 + CTA；变体 B：收益承诺 + CTA；变体 C：案例证据 + CTA。` |
 | Growth / CRO | `funnel-diagnostics` | 分析曝光、点击、注册、激活、付费等环节中的瓶颈。 | 漏斗数据 | `这是近 30 天的曝光、点击、注册、激活、付费数据，帮我找出漏斗里最卡的地方。` | Markdown Skill | `异常段：点击到注册转化率低；可能原因：落地页信息不一致；建议：优化首屏和表单长度。` |
 | Growth / CRO | `experiment-designer` | 把增长想法变成可执行、可验证的实验方案。 | 实验目标、基线指标、可改动变量、实验周期 | `我想提升注册转化 15%，能动的变量是表单长度和按钮文案，帮我设计实验。` | Markdown Skill | `实验假设：缩短注册表单字段数可提升注册率 15%；分组：控制组 vs 两组实验组；周期：14 天。` |
-| Growth / CRO | `ab-test-sample-size` | 估算实验每组最少需要多少样本量。 | `baseline_rate`、`mde`、`alpha`、`power` | `基线转化率 10%，最小可检测提升 2%，显著性 0.05，power 0.8，帮我算样本量。` | Python Skill | `输入：baseline_rate=0.1, mde=0.02；输出：per_group_sample_size=3841, total_sample_size=7682。` |
+| Growth / CRO | `ab-test-sample-size` | 估算实验每组最少需要多少样本量（双侧比例检验）。 | 必填：`baseline_rate`、`mde`（**绝对**转化率差，如 +2pt = 0.02）；可选：`alpha`（默认 0.05）、`power`（默认 0.8） | `基线转化率 10%，要检出绝对 +2 个百分点（到 12%），显著性 0.05，power 0.8，帮我算样本量。` | Python Skill | `输入：baseline_rate=0.1, mde=0.02；输出：per_group_sample_size=3841, total_sample_size=7682。` |
 | CRM & Private Domain | `lifecycle-segmentation` | 基于行为和交易数据做用户生命周期分层。 | 用户行为数据、交易记录、最近活跃时间 | `帮我按新客、活跃、沉睡、高价值做用户分层，并给每层的运营建议。` | Markdown Skill | `分层结果：新客 / 活跃 / 沉睡 / 高价值；运营动作：新客教育、活跃促活、沉睡召回、高价值会员权益。` |
 | CRM & Private Domain | `winback-automation-planner` | 为沉睡用户设计多触点召回流程。 | 目标人群、可用渠道、权益资源、触达频控规则 | `我们想召回沉睡用户，可用短信、企微、公众号，7 天最多触达 3 次，帮我设计流程。` | Markdown Skill | `召回流程：短信首触达 -> 企微补触达 -> 公众号权益提醒；监控指标：打开率、回流率、复购率。` |
 | Analytics & Attribution | `marketing-kpi-framework` | 为营销团队搭建北极星指标、分层指标树和预警机制。 | 业务目标、数据字段、现有报表结构 | `我们的目标是季度新增付费用户，帮我设计一套北极星指标和分层指标体系。` | Markdown Skill | `北极星指标：新增付费用户数；支撑指标：线索量、转化率、CAC、留存率；预警阈值：CAC 环比上涨 20%。` |
@@ -35,5 +35,5 @@
 | --- | --- | --- | --- |
 | `keyword-cluster-builder` | `--keyword` 重复传参，或 `--keywords-file` | `python3 skills/seo-geo-aeo/keyword-cluster-builder/main.py --business-domain "私域增长" --locale zh-CN --keywords-file skills/seo-geo-aeo/keyword-cluster-builder/examples/keywords.txt` | JSON：关键词数量、簇列表、标签、优先级 |
 | `channel-budget-allocator` | `--channels-file` 传入 JSON 渠道数据 | `python3 skills/paid-media/channel-budget-allocator/main.py --total-budget 500000 --goal leads --channels-file skills/paid-media/channel-budget-allocator/examples/channels.json` | JSON：保守 / 均衡 / 激进三套预算方案 |
-| `ab-test-sample-size` | 命令行参数输入实验参数 | `python3 skills/growth-cro/ab-test-sample-size/main.py --baseline-rate 0.1 --mde 0.02 --alpha 0.05 --power 0.8` | JSON：每组样本量、总样本量、参数回显 |
+| `ab-test-sample-size` | 必填 `--baseline-rate`、`--mde`（绝对差）；可选 `--alpha`、`--power` | `python3 skills/growth-cro/ab-test-sample-size/main.py --baseline-rate 0.1 --mde 0.02 --alpha 0.05 --power 0.8` | JSON：每组样本量、总样本量、参数回显（`mde` 非相对增幅） |
 | `campaign-retrospective-writer` | `--input-file` 传入活动 JSON | `python3 skills/analytics-attribution/campaign-retrospective-writer/main.py --input-file skills/analytics-attribution/campaign-retrospective-writer/examples/input.json` | JSON：summary、highlights、issues、action_items |

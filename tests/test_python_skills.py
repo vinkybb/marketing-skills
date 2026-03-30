@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -27,7 +29,33 @@ class PythonSkillsTestCase(unittest.TestCase):
             "ab_test_sample_size_main",
         )
         result = module.proportion_sample_size_per_group(0.1, 0.02, 0.05, 0.8)
-        self.assertGreater(result, 1000)
+        self.assertEqual(result, 3841)
+
+    def test_legacy_ab_entrypoint_matches_canonical(self) -> None:
+        args = [
+            "--baseline-rate",
+            "0.1",
+            "--mde",
+            "0.02",
+            "--alpha",
+            "0.05",
+            "--power",
+            "0.8",
+        ]
+
+        def run_script(relative: str) -> dict[str, object]:
+            completed = subprocess.run(
+                [sys.executable, str(ROOT / relative), *args],
+                cwd=str(ROOT),
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            return json.loads(completed.stdout)
+
+        canonical = run_script("skills/growth-cro/ab-test-sample-size/main.py")
+        legacy = run_script("skills/growth-cro/ab_test_sample_size.py")
+        self.assertEqual(canonical, legacy)
 
     def test_keyword_cluster_builder(self) -> None:
         module = load_module(
@@ -88,6 +116,63 @@ class PythonSkillsTestCase(unittest.TestCase):
         self.assertEqual(result["campaign_name"], "新品首发")
         self.assertGreaterEqual(len(result["highlights"]), 1)
         self.assertGreaterEqual(len(result["action_items"]), 1)
+
+    def test_campaign_retrospective_missing_metric_field(self) -> None:
+        module = load_module(
+            "skills/analytics-attribution/campaign-retrospective-writer/main.py",
+            "campaign_retrospective_writer_main",
+        )
+        with self.assertRaises(ValueError) as ctx:
+            module.build_retrospective(
+                {
+                    "campaign_name": "x",
+                    "goal_metrics": [{"name": "a", "target": 1}],
+                }
+            )
+        self.assertIn("goal_metrics[0]", str(ctx.exception))
+
+    def test_campaign_retrospective_invalid_target(self) -> None:
+        module = load_module(
+            "skills/analytics-attribution/campaign-retrospective-writer/main.py",
+            "campaign_retrospective_writer_main_b",
+        )
+        result = module.build_retrospective(
+            {
+                "campaign_name": "test",
+                "goal_metrics": [
+                    {"name": "线索", "target": 0, "actual": 0},
+                ],
+            }
+        )
+        self.assertIsNone(result["metric_reviews"][0]["achievement_rate"])
+        self.assertTrue(
+            any("目标值无效" in p for p in result["issues"]),
+            msg=result["issues"],
+        )
+
+    def test_campaign_retrospective_single_cpa_channel(self) -> None:
+        module = load_module(
+            "skills/analytics-attribution/campaign-retrospective-writer/main.py",
+            "campaign_retrospective_writer_main_c",
+        )
+        result = module.build_retrospective(
+            {
+                "campaign_name": "solo",
+                "goal_metrics": [],
+                "channel_performance": [
+                    {"name": "搜索", "spend": 1000, "leads": 10, "conversions": 5},
+                    {"name": "信息流", "spend": 500, "leads": 5, "conversions": 0},
+                ],
+            }
+        )
+        self.assertTrue(
+            any("仅单一渠道有转化数据" in h for h in result["highlights"]),
+            msg=result["highlights"],
+        )
+        self.assertFalse(
+            any("CPA 偏高" in p for p in result["issues"]),
+            msg=result["issues"],
+        )
 
 
 if __name__ == "__main__":

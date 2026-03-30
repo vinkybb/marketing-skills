@@ -11,7 +11,16 @@ def ratio(actual: float, target: float) -> float:
     return actual / target
 
 
+def _require_keys(obj: dict[str, object], keys: tuple[str, ...], context: str) -> None:
+    missing = [k for k in keys if k not in obj]
+    if missing:
+        raise ValueError(f"{context} 缺少必填字段: {', '.join(missing)}")
+
+
 def build_retrospective(payload: dict[str, object]) -> dict[str, object]:
+    if not isinstance(payload, dict):
+        raise ValueError("payload 必须是 JSON 对象")
+    _require_keys(payload, ("campaign_name",), "根对象")
     campaign_name = str(payload["campaign_name"])
     goal_metrics = payload.get("goal_metrics", [])
     channel_performance = payload.get("channel_performance", [])
@@ -24,10 +33,24 @@ def build_retrospective(payload: dict[str, object]) -> dict[str, object]:
     problems: list[str] = list(issues)
     action_items: list[str] = []
 
-    for metric in goal_metrics:
+    for index, metric in enumerate(goal_metrics):
+        if not isinstance(metric, dict):
+            raise ValueError(f"goal_metrics[{index}] 必须是对象")
+        _require_keys(metric, ("name", "target", "actual"), f"goal_metrics[{index}]")
         name = str(metric["name"])
         target = float(metric["target"])
         actual = float(metric["actual"])
+        if target <= 0:
+            metric_reviews.append(
+                {
+                    "name": name,
+                    "target": target,
+                    "actual": actual,
+                    "achievement_rate": None,
+                }
+            )
+            problems.append(f"{name} 的目标值无效（target 须大于 0），无法计算达成率。")
+            continue
         achievement = ratio(actual, target)
         metric_reviews.append(
             {
@@ -44,7 +67,10 @@ def build_retrospective(payload: dict[str, object]) -> dict[str, object]:
             action_items.append(f"针对 {name} 复盘转化链路并补充下轮修正动作。")
 
     scored_channels: list[dict[str, object]] = []
-    for channel in channel_performance:
+    for index, channel in enumerate(channel_performance):
+        if not isinstance(channel, dict):
+            raise ValueError(f"channel_performance[{index}] 必须是对象")
+        _require_keys(channel, ("name",), f"channel_performance[{index}]")
         name = str(channel["name"])
         spend = float(channel.get("spend", 0))
         leads = float(channel.get("leads", 0))
@@ -63,26 +89,23 @@ def build_retrospective(payload: dict[str, object]) -> dict[str, object]:
         )
 
     if scored_channels:
-        best_channel = min(
-            (item for item in scored_channels if item["cpa"] is not None),
-            key=lambda item: item["cpa"],
-            default=None,
-        )
-        worst_channel = max(
-            (item for item in scored_channels if item["cpa"] is not None),
-            key=lambda item: item["cpa"],
-            default=None,
-        )
-        if best_channel:
+        with_cpa = [item for item in scored_channels if item["cpa"] is not None]
+        if len(with_cpa) >= 2:
+            best_channel = min(with_cpa, key=lambda item: item["cpa"])
+            worst_channel = max(with_cpa, key=lambda item: item["cpa"])
             highlights.append(
                 f"{best_channel['name']} 的 CPA 最优，为 {best_channel['cpa']}。"
             )
-        if worst_channel:
             problems.append(
                 f"{worst_channel['name']} 的 CPA 偏高，为 {worst_channel['cpa']}。"
             )
             action_items.append(
                 f"下轮降低 {worst_channel['name']} 的低效投放并重新验证素材与定向。"
+            )
+        elif len(with_cpa) == 1:
+            only = with_cpa[0]
+            highlights.append(
+                f"{only['name']} 可计算 CPA 为 {only['cpa']}（仅单一渠道有转化数据，未做高低对比）。"
             )
 
     highlights.extend(wins)

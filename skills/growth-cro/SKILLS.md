@@ -22,5 +22,5 @@
 - Outputs：每组样本量、总样本量、参数回显（JSON）
 - Workflow：读取参数 → 计算双侧比例检验样本量 → 返回结构化结果
 - Python 实现：`skills/growth-cro/ab-test-sample-size/main.py`
-- 兼容旧路径：`skills/growth-cro/ab_test_sample_size.py`
+- 兼容旧路径：`skills/growth-cro/ab_test_sample_size.py`（内部转调 `ab-test-sample-size/main.py`，行为一致）
 - 示例命令：`python3 skills/growth-cro/ab-test-sample-size/main.py --baseline-rate 0.1 --mde 0.02 --alpha 0.05 --power 0.8`
